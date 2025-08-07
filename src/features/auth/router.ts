@@ -4,6 +4,7 @@ import { strings } from 'shared/strings';
 import bcrypt from 'bcrypt'
 import config from 'config/config';
 import jwt from 'jsonwebtoken';
+import { isAuthenticated } from 'shared/middlewares/is_authenticated';
 
 const authRouter = Router()
 
@@ -70,10 +71,30 @@ authRouter.post('/register', async function (req, res, next) {
     }
 })
 
-authRouter.get('/me', async function (req, res, next) {
-    // TODO: Add the correct implementation
-    // const user = await User.Model.findById('')
-    // res.status(200).json(user as User.IBase)
+authRouter.get('/me', isAuthenticated, async function (req, res, next) {
+    const userId = req.userId;
+
+    if (!userId) {
+        res.status(401).json({
+            error: {
+                message: strings.unauthenticated,
+            }
+        })
+        return
+    }
+
+    const user = await User.Model.findById(userId)
+
+    if (!user) {
+        res.status(401).json({
+            error: {
+                message: strings.unauthenticated,
+            }
+        })
+        return
+    }
+
+    res.status(200).json(user.toJSON())
 })
 
 export default authRouter
