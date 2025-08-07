@@ -8,7 +8,7 @@ import { isAuthenticated } from 'shared/middlewares/is_authenticated';
 
 const authRouter = Router()
 
-const TOKEN_EXPIRES_IN = '30m'
+const TOKEN_EXPIRES_IN = '30d'
 
 authRouter.post('/register', async function (req, res, next) {
     try {
@@ -96,6 +96,66 @@ authRouter.get('/me', isAuthenticated, async function (req, res, next) {
 
     res.status(200).json(user.toJSON())
 })
+
+authRouter.post('/login', async function (req, res, next) {
+    try {
+        const { email, password } = req.body || {};
+
+        const emailError = _validateEmail(email);
+        const passwordError = _validatePassword(password);
+
+        if (emailError || passwordError) {
+            return res.status(422).json({
+                error: {
+                    email: emailError,
+                    password: passwordError,
+                }
+            });
+        }
+
+        const user = await User.Model.findOne({ email }).select("+password");
+
+        if (!user || !user.password) {
+            return res.status(422).json({
+                error: {
+                    message: strings.invalidCredentials,
+                }
+            });
+        }
+
+        const passwordMatch = await bcrypt.compare(password, user.password);
+
+        if (!passwordMatch) {
+            return res.status(422).json({
+                error: {
+                    message: strings.invalidCredentials,
+                }
+            });
+        }
+
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            config.jwtSecret,
+            { expiresIn: TOKEN_EXPIRES_IN }
+        );
+
+        return res.status(200).json({
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            error: {
+                message: strings.loginError,
+            }
+        });
+    }
+});
 
 export default authRouter
 

@@ -11,5 +11,7 @@ export const strings = {
     emailInUse: "Електронна адреса вже використовується",
     invalidToken: "Не вірний токен",
     malformedAuth: "Недійсний формат токена автентифікації",
-    unauthenticated: "Помилка автентифікації"
+    unauthenticated: "Помилка автентифікації",
+    invalidCredentials: "Невірний email або пароль",
+    loginError: "Не вдалося виконати вхід. Спробуйте пізніше",
 }
