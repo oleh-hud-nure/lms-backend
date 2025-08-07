@@ -6,11 +6,13 @@ export namespace User {
         id: string
         name: string
         email: string
+        password: string | undefined
     }
 
     const UserSchema = new Schema<IBase>({
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
+        password: { type: String, required: true, select: false },
     })
 
     UserSchema.plugin(toJSONPlugin)
